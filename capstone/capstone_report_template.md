@@ -1,26 +1,66 @@
 # Machine Learning Engineer Nanodegree
-## Capstone Project
-Joe Udacity  
-December 31st, 2050
+## Telstra Network Disruptions
+Jeremias Binder 
+June 2nd, 2017
 
 ## I. Definition
 _(approx. 1-2 pages)_
 
 ### Project Overview
+
+Telstra is australias biggest telecommunications and media company with an annual revenue of over 20 billion USD (A$27.1 billion).
+In a recent Kaggle competition, Telstra challenged people to predict the severity of service disruptions on their network. The reason:
+
+Telstra is on a journey to enhance the customer experience - ensuring everyone in the company is putting customers first. In terms of its expansive network, this means continuously advancing how it predicts the scope and timing of service disruptions. Telstra wants to see how kaggle users would help it drive customer advocacy by developing a more advanced predictive model for service disruptions and to help it better serve its customers.
+
+<p>(Telstra Network Disruptions. (2016). Retrieved and edited June 12, 2017,  from the <a href="https://www.kaggle.com/c/telstra-recruiting-network/data">competitions page</a>).</p>
+
+The data used in the competition is provided by Telstra. Service logs and data from their network nodes were prepared, anonymised and are available on <a href="https://www.kaggle.com/c/telstra-recruiting-network/data">Kaggle</a>.
+
+The competition ended at 2/29/2016, the winner was a user called ‘Mario Filho’. In total, 974 teams participated in the competition. 
+
+
+One of the reasons i choose this project as my capstone project for the Machine Learning Nanodegree at Udacity, is that the company i am currently working at, the sovanta AG in Heidelberg, Germany, has some projects running in the domain of predictive maintenance.
+
+
+
+----------------
 In this section, look to provide a high-level overview of the project in layman’s terms. Questions to ask yourself when writing this section:
+
 - _Has an overview of the project been provided, such as the problem domain, project origin, and related datasets or input data?_
 - _Has enough background information been given so that an uninformed reader would understand the problem domain and following problem statement?_
 
+----------------
+
+
 ### Problem Statement
+
+The problem we are about to solve, is to minimize the reaction time to interruptions in Telstras network. Long reaction times lower customer satisfaction in the long run and can therefore be costly to Telstra. 
+A model, that can predict accurately the network failures in advance, would be very valuable to Telstra and its customers.
+
+The problem right now is, that Telstra has no good estimation on when one of their nodes will fail. They might have clues (certain nodes reporting an error), but no further conclusions are drawn from this data.
+
+A predictive model can change that: The data provided by the nodes will be used to create a model, that will accurately predict failures on the network.
+
+Since the input information is digitally obtained, each error message can be put in a certain category and is distinct. Since it’s a future prediction, it’s easily verifiable: A er the event is predicted, the actual time and place can be observed and the degree to which the prediction is correct can be verified.
+
+----------------
 In this section, you will want to clearly define the problem that you are trying to solve, including the strategy (outline of tasks) you will use to achieve the desired solution. You should also thoroughly discuss what the intended solution will be for this problem. Questions to ask yourself when writing this section:
 - _Is the problem statement clearly defined? Will the reader understand what you are expecting to solve?_
 - _Have you thoroughly discussed how you will attempt to solve the problem?_
 - _Is an anticipated solution clearly defined? Will the reader understand what results you are looking for?_
 
+----------------
+
 ### Metrics
+
+
+----------------
 In this section, you will need to clearly define the metrics or calculations you will use to measure performance of a model or result in your project. These calculations and metrics should be justified based on the characteristics of the problem and problem domain. Questions to ask yourself when writing this section:
 - _Are the metrics you’ve chosen to measure the performance of your models clearly discussed and defined?_
 - _Have you provided reasonable justification for the metrics chosen based on the problem and solution?_
+
+----------------
 
 
 ## II. Analysis
