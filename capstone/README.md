@@ -1,5 +1,5 @@
 # Machine Learning Engineer Nanodegree
-## Predicting Telstra Network Disruptions
+## Predicting Telstra Network Disruptions - Project Proposal
 Jeremias Binder  
 May 28th, 2017
 
@@ -62,8 +62,7 @@ One (or several) benchmark models are provided in the [discussion forum](https:/
 The thing Telstra is interested in, is when and where their nodes are likely to fail. The quality of the prediction therefore matters: 
 To determine the quality of such a model the multi-class logarithmic loss is used. Each data row has been labeled with one true class, which represents the severity of the incident (an incident with label '0' means, there is no issue). For each row,  a set of predicted probabilities is submitted (one for every fault severity). The formula is then,
 
-\\[ logloss = - {1\over N} \\sum_{i=1}^{N} {\\sum_{j=1}^{M}}  {y_{ij}  log (p_{ij})},\\]
-
+[the multiclass logarithmic logloss](https://www.kaggle.com/wiki/MultiClassLogLoss)) 
 
 where N is the number of rows in the test set, M is the number of fault severity classes,  $ log $ is the natural logarithm, $ y_{ij} $ is 1 if observation $i$ belongs to class $j$  and $0$ otherwise, and $p_{ij}$ is the predicted probability that observation $i$ belongs to class $j$.
 Or in layman terms: The lower the sum of wrongly predicted severities, the lower the logloss. Participants with a lower logloss on the testset get ranked higher on the public leaderboard. 
