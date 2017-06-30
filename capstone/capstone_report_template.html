@@ -79,9 +79,11 @@ A model, that can predict accurately the network failures in advance, would be v
 <p>The thing Telstra is interested in, is when and where their nodes are likely to fail. The quality of the prediction therefore matters:  <br>
 To determine the quality of such a model the multi-class logarithmic loss is used. Each data row has been labeled with one true class, which represents the severity of the incident (an incident with label ‘0’ means, there is no issue). For each row,  a set of predicted probabilities is submitted (one for every fault severity). The formula is then,</p>
 
-<p><script type="math/tex; mode=display" id="MathJax-Element-1252"> logloss = - {1\over N} \sum_{i=1}^{N} {\sum_{j=1}^{M}}  {y_{ij}  log (p_{ij})},</script></p>
 
-<p>where N is the number of rows in the test set, M is the number of fault severity classes,  <script type="math/tex" id="MathJax-Element-1253"> log </script> is the natural logarithm, <script type="math/tex" id="MathJax-Element-1254"> y_{ij} </script> is 1 if observation <script type="math/tex" id="MathJax-Element-1255">i</script> belongs to class <script type="math/tex" id="MathJax-Element-1256">j</script>  and <script type="math/tex" id="MathJax-Element-1257">0</script> otherwise, and <script type="math/tex" id="MathJax-Element-1258">p_{ij}</script> is the predicted probability that observation <script type="math/tex" id="MathJax-Element-1259">i</script> belongs to class <script type="math/tex" id="MathJax-Element-1260">j</script>. <br>
+
+<p><script type="math/tex; mode=display" id="MathJax-Element-1"> logloss = - {1\over N} \sum_{i=1}^{N} {\sum_{j=1}^{M}}  {y_{ij}  log (p_{ij})},</script></p>
+
+<p>where N is the number of rows in the test set, M is the number of fault severity classes,  <script type="math/tex" id="MathJax-Element-2"> log </script> is the natural logarithm, <script type="math/tex" id="MathJax-Element-3"> y_{ij} </script> is 1 if observation <script type="math/tex" id="MathJax-Element-4">i</script> belongs to class <script type="math/tex" id="MathJax-Element-5">j</script>  and <script type="math/tex" id="MathJax-Element-6">0</script> otherwise, and <script type="math/tex" id="MathJax-Element-7">p_{ij}</script> is the predicted probability that observation <script type="math/tex" id="MathJax-Element-8">i</script> belongs to class <script type="math/tex" id="MathJax-Element-9">j</script>. <br>
 Or in layman terms: The lower the sum of wrongly predicted severities, the lower the logloss. Participants with a lower logloss on the testset get ranked higher on the public leaderboard.  <br>
 Scoring a low logloss on the testset is important, since the model might overfit on the trainset.</p>
 
@@ -99,6 +101,8 @@ But: Our model will give us predictions in the form of a probability distributio
 
 <hr>
 
+
+
 <h2 id="ii-analysis">II. Analysis</h2>
 
 <p><em>(approx. 2-4 pages)</em></p>
@@ -107,37 +111,142 @@ But: Our model will give us predictions in the form of a probability distributio
 
 <h3 id="data-exploration">Data Exploration</h3>
 
+<p>Lets take first glance at the data, which comes in six files:</p>
+
+<p>train.csv - the training set for fault severity  <br>
+test.csv - the test set for fault severity  <br>
+event_type.csv - event type related to the main dataset  <br>
+log_feature.csv - features extracted from log files  <br>
+resource_type.csv - type of resource related to the main dataset  <br>
+severity_type.csv - severity type of a warning message coming from the log</p>
+
+<p>All the files have one attribute, that connects them all together: The column named ‘id’. Note that the ‘id’ doesn’t have the same property as a key we might now from relational databases: Sometimes one id is listed several times in one column.</p>
+
+<p>After quickly scrolling through the data in MS Excel, i decided to do the following: <br>
+In order to just process numeric data, i dropped the strings from all the csv files containing the description (‘event_type ‘, ‘log_feature ‘, ‘resource_type’) manually with the replace function.</p>
+
+<table>
+<thead>
+<tr>
+  <th>id</th>
+  <th align="center">event_type</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>62093</td>
+  <td align="center"><del>event_type</del> 15</td>
+</tr>
+</tbody></table>
+
+
+<p>The thing i did then was calculating basic statistics of the data from the files to get a good first understanding. <br>
+What i found out was:</p>
+
+<ul>
+<li><p>Most of the interruptions in the <em>train</em> data are just a temporary network glitch ( Fault <br>
+Severity = 0), but 1 and 2 do seem to cause problems quite frequently <br>
+(around 35% of the time). </p></li>
+<li><p>The <em>event types</em> 11,35 and 34, 15 and 2 seem <br>
+occur a lot together with a network incident</p></li>
+<li><p><em>Resource types</em> 8 and 2 are the most prevalent. There is a significant gap <br>
+between these two resources and the rest.</p></li>
+<li><p><em>Severity type</em> of warning messages 1 and 2 seem to be the most frequent ones.</p></li>
+<li><em>Log features</em> is actually tricky to deal with: we have the ‘id’ column, then the ‘log feature’ column and a ‘volume’ column, which indicates how often a ‘log feature’ appeared with an network incident. The fact that there are 386 different ‘log features’ became a real sticking point for this problem. </li>
+</ul>
+
+<p>Note that this is just a univariant analysis of the features provided in the single files. The initial plan was to provide a multivariant analyis of the data, but this became almost impossible, since the data is quite sparse.</p>
+
+<p>So the challenge in the first place was to merge the files into one coherent frame to work with. This turned out to be more difficult than expected, since the the <em>log_feature</em> table contained 453 categorical values, which couldn’t be merged easily together with the ids of the other files.</p>
+
+<p>Also, each id usually had just a few features from <em>log_feature</em>, so i decided to one-hot encode the information into the frame. Actually, i tried two versions of one-hot-encoding to solve this problem: <br>
+At first, i did a binary one-hot-encoding and discarded the <em>volume</em> information of the features, then i tried something else and used the <em>volume</em> value of each feature instead of just a one. </p>
+
+<p>I ended up with a dataframe with a total of 453 features. Of course, this is just the first draft of the set, so started to think of ways to further reduce the feature space.</p>
+
+<hr>
+
 <p>In this section, you will be expected to analyze the data you are using for the problem. This data can either be in the form of a dataset (or datasets), input data (or input files), or even an environment. The type of data should be thoroughly described and, if possible, have basic statistics and information presented (such as discussion of input features or defining characteristics about the input or environment). Any abnormalities or interesting qualities about the data that may need to be addressed have been identified (such as features that need to be transformed or the possibility of outliers). Questions to ask yourself when writing this section: <br>
 - <em>If a dataset is present for this problem, have you thoroughly discussed certain features about the dataset? Has a data sample been provided to the reader?</em> <br>
 - <em>If a dataset is present for this problem, are statistics about the dataset calculated and reported? Have any relevant results from this calculation been discussed?</em> <br>
 - <em>If a dataset is <strong>not</strong> present for this problem, has discussion been made about the input space or input data for your problem?</em> <br>
 - <em>Are there any abnormalities or characteristics about the input space or dataset that need to be addressed? (categorical variables, missing values, outliers, etc.)</em></p>
 
+<hr>
+
 
 
 <h3 id="exploratory-visualization">Exploratory Visualization</h3>
+
+<p>As already explained above, due to the sparse nature of the data, a multivariate analysis of the data is not easy to provide. However, i plotted the features in histograms, which seems like a good entry point for further discussions. </p>
+
+<p><img src="https://image.ibb.co/df4Jk5/fig.png" alt="enter image description here" title=""></p>
+
+
+
+<h2 id="todo-log-feature-top-50">TODO : Log feature top 50</h2>
+
+<hr>
 
 <p>In this section, you will need to provide some form of visualization that summarizes or extracts a relevant characteristic or feature about the data. The visualization should adequately support the data being used. Discuss why this visualization was chosen and how it is relevant. Questions to ask yourself when writing this section: <br>
 - <em>Have you visualized a relevant characteristic or feature about the dataset or input data?</em> <br>
 - <em>Is the visualization thoroughly analyzed and discussed?</em> <br>
 - <em>If a plot is provided, are the axes, title, and datum clearly defined?</em></p>
 
+<hr>
+
 
 
 <h3 id="algorithms-and-techniques">Algorithms and Techniques</h3>
+
+<p>So, after merging the files in one single frame, i could finally get started with my very first model. Reading through some of the forums on the web and in specific kaggle, i decided to take a closer look  on the xgboost algorithm.</p>
+
+<p>The xgboost algorithm is a flexible, performant, and scalable gradient boosting algorithm, which gained a lot of popularity on recent kaggle competitions. Boosting is an ensemble technique where new models are added to correct the errors made by existing models. Models are added sequentially until no further improvements can be made.</p>
+
+<p>Lets have a look on the most important default parameters set in our xgboost classifier ( or read the <a href="https://github.com/dmlc/xgboost/blob/master/doc/parameter.md">full list</a>):</p>
+
+<ul>
+<li>eta [default=0.3, alias: learning_rate]: The learning rate of algorithm, Makes the model more robust by shrinking the weights on each step.</li>
+<li>gamma [default=0, alias: min_split_loss]: A node is split only when the resulting split gives a positive reduction in the loss function. Gamma specifies the minimum loss reduction required to make a split.</li>
+<li>max_depth [default=6]: This describes the maximum depth of a decision tree. The parameter is used to control over-fitting as higher depth will allow model to learn relations very specific to a particular sample. <strong>Include in CV</strong></li>
+<li>min_child_weight [default=1]: here we define the minimum sum of weights of all observations required in a child node of a DT. Its also a measure to prevent overfitting, it avoids relations which might be highly specific to a certain sample.  <strong>Include in CV</strong></li>
+</ul>
+
+<p>What the xgboost algorithm does, with </p>
+
+<hr>
 
 <p>In this section, you will need to discuss the algorithms and techniques you intend to use for solving the problem. You should justify the use of each one based on the characteristics of the problem and the problem domain. Questions to ask yourself when writing this section: <br>
 - <em>Are the algorithms you will use, including any default variables/parameters in the project clearly defined?</em> <br>
 - <em>Are the techniques to be used thoroughly discussed and justified?</em> <br>
 - <em>Is it made clear how the input data or datasets will be handled by the algorithms and techniques chosen?</em></p>
 
-
+<hr>
 
 <h3 id="benchmark">Benchmark</h3>
+
+<p>To determine the quality of our model the <a href="http://scikit-learn.org/stable/modules/generated/sklearn.metrics.log_loss.html">multiclass logarithmic loss function</a> is used. Each data row has been labeled with one true class, which represents the severity of the incident (an incident with label ‘0’ means, there is no issue). For each row,  a set of predicted probabilities is submitted (one for every fault severity). The formula is then,</p>
+
+
+
+<p><script type="math/tex; mode=display" id="MathJax-Element-10"> logloss = - {1\over N} \sum_{i=1}^{N} {\sum_{j=1}^{M}}  {y_{ij}  log (p_{ij})},</script></p>
+
+<p>where N is the number of rows in the test set, M is the number of fault severity classes,  <script type="math/tex" id="MathJax-Element-11"> log </script> is the natural logarithm, <script type="math/tex" id="MathJax-Element-12"> y_{ij} </script> is 1 if observation <script type="math/tex" id="MathJax-Element-13">i</script> belongs to class <script type="math/tex" id="MathJax-Element-14">j</script>  and <script type="math/tex" id="MathJax-Element-15">0</script> otherwise, and <script type="math/tex" id="MathJax-Element-16">p_{ij}</script> is the predicted probability that observation <script type="math/tex" id="MathJax-Element-17">i</script> belongs to class <script type="math/tex" id="MathJax-Element-18">j</script>. <br>
+Or in layman terms: The lower the sum of wrongly predicted severities, the lower the logloss. Participants with a lower logloss on the testset get ranked higher on the public leaderboard.  <br>
+Scoring a low logloss on the testset is important, since the model might overfit on the trainset. </p>
+
+<p>Once the model is fitted, we will run the built-in xgboost function ‘predict_proba’ to predict the probabilities for each severity category in the ‘test.csv’ file and then upload them on the kaggle submission page, to calculate against the kaggle testset.</p>
+
+<p>To get a feeling on what score to expect:  <br>
+The first place on the Telstra leaderboard, a user called Mario Filho, scored a log loss of 0.3954. <br>
+Once i submitted the complete dataset &amp; ran xgboost with default settings, i scored a logloss of 0.58323. So the final prediction will probably be in the range between 0.4 and 0.55.</p>
+
+<hr>
 
 <p>In this section, you will need to provide a clearly defined benchmark result or threshold for comparing across performances obtained by your solution. The reasoning behind the benchmark (in the case where it is not an established result) should be discussed. Questions to ask yourself when writing this section: <br>
 - <em>Has some result or value been provided that acts as a benchmark for measuring performance?</em> <br>
 - <em>Is it clear how this result or value was obtained (whether by data or by hypothesis)?</em></p>
+
+<hr>
 
 
 
@@ -149,30 +258,172 @@ But: Our model will give us predictions in the form of a probability distributio
 
 <h3 id="data-preprocessing">Data Preprocessing</h3>
 
+
+
+<h4 id="1-merging-the-data">1. Merging the data.</h4>
+
+<p>As explained in the ‘Data Exploration’ Section, the problem with our dataset is, that the length of the different data files attributes have different length. Not every id in the one table corresponds to every id in the other tables. Some tables vary in length. In order to fit the data to the xgboost classifier, the dataframe first has to be put in shape.</p>
+
+<p>To unify this information, i decided to one-hot encode all the features. While this was quite straightfoward with <em>events</em>, <em>severity</em>, and <em>resource type</em>, i had decided to change plans with <em>log features</em> at first: <br>
+I decided to drop the information of the <em>volume</em> column and make <em>log feature</em> binary.</p>
+
+<p>Say for a given <em>id</em> the volume of feature 2 is 7, while log features 1-n are all zero. You can see the pure “one-hot encoded” approach in the first row, and the “volume-hot-encoded” approach in the second row. <br>
+<br></p>
+
+<table>
+<thead>
+<tr>
+  <th>approach</th>
+  <th></th>
+  <th>id</th>
+  <th align="center">log feature 1</th>
+  <th align="center">log feature 2</th>
+  <th align="center">…</th>
+  <th align="center">log feature n</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>one-hot encode</td>
+  <td></td>
+  <td>62093</td>
+  <td align="center">0</td>
+  <td align="center">1</td>
+  <td align="center">…</td>
+  <td align="center">0</td>
+</tr>
+<tr>
+  <td>volume-hot encode</td>
+  <td></td>
+  <td>62093</td>
+  <td align="center">0</td>
+  <td align="center">7</td>
+  <td align="center">…</td>
+  <td align="center">0</td>
+</tr>
+</tbody></table>
+
+
+<p><br></p>
+
+<p>Now i had all the features one hot encoded in different tables. <br>
+Time, to unify them into one table. In order to do so, i merged the files one by one into the ‘train’ pandas frame. Here’s a code snippet:</p>
+
+<pre><code>train = pd.merge(train, pd.DataFrame(severity, columns = ['id', 'severity_type']), on='id',how='left')
+</code></pre>
+
+<p>As you can see, i am merging the ‘train’ frame with the ‘severity’ frame on their id, by using keys from the train frame, similar to a SQL left outer join. The operation preserves the key order.</p>
+
+<p>I finally ended up with a 7381x453 dataframe, which contained all possible features, one-hot encoded. <br>
+So here’s a simplified version of how the table looks after all the operations. Note that it containts 453 columns (shortened here with 1…n) </p>
+
+<table>
+<thead>
+<tr>
+  <th>id</th>
+  <th></th>
+  <th>severity <br>type 1 … n</th>
+  <th align="center">event <br>type 1 … n</th>
+  <th align="center">log <br>feature 1 … n</th>
+  <th align="center">resource <br> type 1 … n</th>
+  <th align="center">fault <br>severity</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>62093</td>
+  <td></td>
+  <td>1</td>
+  <td align="center">0</td>
+  <td align="center">1</td>
+  <td align="center">1</td>
+  <td align="center">0</td>
+</tr>
+<tr>
+  <td>58261</td>
+  <td></td>
+  <td>1</td>
+  <td align="center">0</td>
+  <td align="center">0</td>
+  <td align="center">…</td>
+  <td align="center">2</td>
+</tr>
+<tr>
+  <td>…</td>
+  <td></td>
+  <td>…</td>
+  <td align="center">…</td>
+  <td align="center">…</td>
+  <td align="center">…</td>
+  <td align="center">…</td>
+</tr>
+<tr>
+  <td>28413</td>
+  <td></td>
+  <td>0</td>
+  <td align="center">1</td>
+  <td align="center">0</td>
+  <td align="center">0</td>
+  <td align="center">1</td>
+</tr>
+</tbody></table>
+
+
+<p>This dataset is now ready for a first fitting iteration with xgboost.</p>
+
+<hr>
+
 <p>In this section, all of your preprocessing steps will need to be clearly documented, if any were necessary. From the previous section, any of the abnormalities or characteristics that you identified about the dataset will be addressed and corrected here. Questions to ask yourself when writing this section: <br>
 - <em>If the algorithms chosen require preprocessing steps like feature selection or feature transformations, have they been properly documented?</em> <br>
 - <em>Based on the <strong>Data Exploration</strong> section, if there were abnormalities or characteristics that needed to be addressed, have they been properly corrected?</em> <br>
 - <em>If no preprocessing is needed, has it been made clear why?</em></p>
 
-
+<hr>
 
 <h3 id="implementation">Implementation</h3>
+
+<p>Now that i finally got the dataframe set up, we’re ready to run the first iteration of our fault severity prediction. <br>
+ As described above, i choose the xgboost algorithm as classifier. Lets split our dataset into a train- and testset, and see what logloss we can achieve with this rough first draw:</p>
+
+<pre><code>test_size = 0.2
+X_train, X_test, y_train, y_test = train_test_split(train, y, test_size=test_size, random_state=7)
+model_1 = xgboost.XGBClassifier(eval_metric='mlogloss', max_depth = 5)
+model_1.fit(X_train, y_train.values.ravel())
+</code></pre>
+
+<p>Note that the initial parameters for our classifier are the default settings, i just changed <em>max_depth</em> to <em>5</em>, since the default value of <em>3</em> appeared very small for such a sparse dataset. Parameter tuning and model improvement will be the topic of the refinement chapter.</p>
+
+<p>The moment of truth came, the classifier accepted the frame without an error and fitted the first classifier. </p>
+
+<pre><code>   from sklearn.metrics import log_loss
+   y_pred = model_1.predict_proba(X_test)
+   print("Logloss: %.3f" % log_loss(y_test,y_pred))
+   ----
+   Logloss: 0.584
+</code></pre>
+
+<p>A value of 0.584 on the personal testset and 0.578 on the kaggle board is a quite acceptable value for the first submission without any tuning. </p>
+
+<hr>
 
 <p>In this section, the process for which metrics, algorithms, and techniques that you implemented for the given data will need to be clearly documented. It should be abundantly clear how the implementation was carried out, and discussion should be made regarding any complications that occurred during this process. Questions to ask yourself when writing this section: <br>
 - <em>Is it made clear how the algorithms and techniques were implemented with the given datasets or input data?</em> <br>
 - <em>Were there any complications with the original metrics or techniques that required changing prior to acquiring a solution?</em> <br>
 - <em>Was there any part of the coding process (e.g., writing complicated functions) that should be documented?</em></p>
 
-
+<hr>
 
 <h3 id="refinement">Refinement</h3>
+
+<p>The initial model is now set up, and gives us a stable result we can further build upon.  <br>
+As in the preprocessing chapter described, there are a lot of attributes we included, resulting in a very sparse dataset. In order to improve the result, it is obvious to me, that the feature space needs to be reduced.</p>
+
+<hr>
 
 <p>In this section, you will need to discuss the process of improvement you made upon the algorithms and techniques you used in your implementation. For example, adjusting parameters for certain models to acquire improved solutions would fall under the refinement category. Your initial and final solutions should be reported, as well as any significant intermediate results as necessary. Questions to ask yourself when writing this section: <br>
 - <em>Has an initial solution been found and clearly reported?</em> <br>
 - <em>Is the process of improvement clearly documented, such as what techniques were used?</em> <br>
 - <em>Are intermediate and final solutions clearly reported as the process is improved?</em></p>
 
-
+<hr>
 
 <h2 id="iv-results">IV. Results</h2>
 
