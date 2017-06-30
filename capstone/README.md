@@ -57,17 +57,6 @@ If the the submitted set scores a sufficient low logloss and is generalizable on
 One (or several) benchmark models are provided in the [discussion forum](https://www.kaggle.com/c/telstra-recruiting-network/discussion) of the competition, since it already finished and some of the participants published their solution. Also, the leaderboard provides a good check on the quality of the model: All the models are evaluated with the below described multi-class logarithmic loss metric and are therefore directly comparable with each other.
 
 
-### Evaluation Metrics
-
-The thing Telstra is interested in, is when and where their nodes are likely to fail. The quality of the prediction therefore matters: 
-To determine the quality of such a model the multi-class logarithmic loss is used. Each data row has been labeled with one true class, which represents the severity of the incident (an incident with label '0' means, there is no issue). For each row,  a set of predicted probabilities is submitted (one for every fault severity). The formula is then,
-
-[the multiclass logarithmic logloss](https://www.kaggle.com/wiki/MultiClassLogLoss)) 
-
-where N is the number of rows in the test set, M is the number of fault severity classes,  $ log $ is the natural logarithm, $ y_{ij} $ is 1 if observation $i$ belongs to class $j$  and $0$ otherwise, and $p_{ij}$ is the predicted probability that observation $i$ belongs to class $j$.
-Or in layman terms: The lower the sum of wrongly predicted severities, the lower the logloss. Participants with a lower logloss on the testset get ranked higher on the public leaderboard. 
-Scoring a low logloss on the testset is important, since the model might overfit on the trainset.
-
 
 
 ### Project Design
