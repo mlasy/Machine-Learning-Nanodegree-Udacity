@@ -81,3 +81,22 @@ Finally, a model will be applied. Since we have labeled data, a supervised kerne
 
 I will try different algorithms and tweak the parameters until a satisfying logloss is reached. 
 Also, an ensemble learner might help out here. Finally, predictions will be made on the personal validation set, then on the test.csv and are finally submitted to the Kaggle competition.
+
+### Libraries
+The following libraries were imported and used in this project:
+
+-numpy
+-sklearn
+-pandas
+-matplotlib
+-ggplot
+-seaborn
+-random
+-xgboost
+-datetime
+-scipy
+-sklearn
+-sklearn
+-xgboost
+
+
