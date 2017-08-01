@@ -50,8 +50,6 @@ In a recent Kaggle competition, Telstra challenged people to predict the severit
 
 <hr>
 
-
-
 <h3 id="problem-statement">Problem Statement</h3>
 
 <p>The problem we are about to solve, is to minimize the reaction time to interruptions in Telstras network. Long reaction times lower customer satisfaction in the long run and can therefore be costly to Telstra.  <br>
@@ -61,7 +59,7 @@ A model, that can predict accurately the network failures in advance, would be v
 
 <p>A predictive model can change that: The data provided by the nodes will be used to create a model, that will accurately predict failures on the network.</p>
 
-<p>Since the input information is digitally obtained, each error message can be put in a certain category and is distinct. Since it’s a future prediction, it’s easily verifiable: A er the event is predicted, the actual time and place can be observed and the degree to which the prediction is correct can be verified.</p>
+<p>Since the input information is digitally obtained, each error message can be put in a certain category and is distinct. Since it’s a future prediction, it’s easily verifiable: After the event is predicted, the actual time and place can be observed and the degree to which the prediction is correct can be verified.</p>
 
 <hr>
 
@@ -72,8 +70,6 @@ A model, that can predict accurately the network failures in advance, would be v
 
 <hr>
 
-
-
 <h3 id="metrics">Metrics</h3>
 
 <p>The thing Telstra is interested in, is when and where their nodes are likely to fail. The quality of the prediction therefore matters:  <br>
@@ -81,9 +77,9 @@ To determine the quality of such a model the multi-class logarithmic loss is use
 
 
 
-<p><script type="math/tex; mode=display" id="MathJax-Element-1"> logloss = - {1\over N} \sum_{i=1}^{N} {\sum_{j=1}^{M}}  {y_{ij}  log (p_{ij})},</script></p>
+<p><script type="math/tex; mode=display" id="MathJax-Element-27"> logloss = - {1\over N} \sum_{i=1}^{N} {\sum_{j=1}^{M}}  {y_{ij}  log (p_{ij})},</script></p>
 
-<p>where N is the number of rows in the test set, M is the number of fault severity classes,  <script type="math/tex" id="MathJax-Element-2"> log </script> is the natural logarithm, <script type="math/tex" id="MathJax-Element-3"> y_{ij} </script> is 1 if observation <script type="math/tex" id="MathJax-Element-4">i</script> belongs to class <script type="math/tex" id="MathJax-Element-5">j</script>  and <script type="math/tex" id="MathJax-Element-6">0</script> otherwise, and <script type="math/tex" id="MathJax-Element-7">p_{ij}</script> is the predicted probability that observation <script type="math/tex" id="MathJax-Element-8">i</script> belongs to class <script type="math/tex" id="MathJax-Element-9">j</script>. <br>
+<p>where N is the number of rows in the test set, M is the number of fault severity classes,  <script type="math/tex" id="MathJax-Element-28"> log </script> is the natural logarithm, <script type="math/tex" id="MathJax-Element-29"> y_{ij} </script> is 1 if observation <script type="math/tex" id="MathJax-Element-30">i</script> belongs to class <script type="math/tex" id="MathJax-Element-31">j</script>  and <script type="math/tex" id="MathJax-Element-32">0</script> otherwise, and <script type="math/tex" id="MathJax-Element-33">p_{ij}</script> is the predicted probability that observation <script type="math/tex" id="MathJax-Element-34">i</script> belongs to class <script type="math/tex" id="MathJax-Element-35">j</script>. <br>
 Or in layman terms: The lower the sum of wrongly predicted severities, the lower the logloss. Participants with a lower logloss on the testset get ranked higher on the public leaderboard.  <br>
 Scoring a low logloss on the testset is important, since the model might overfit on the trainset.</p>
 
@@ -100,8 +96,6 @@ But: Our model will give us predictions in the form of a probability distributio
 - <em>Have you provided reasonable justification for the metrics chosen based on the problem and solution?</em></p>
 
 <hr>
-
-
 
 <h2 id="ii-analysis">II. Analysis</h2>
 
@@ -123,7 +117,7 @@ severity_type.csv - severity type of a warning message coming from the log</p>
 <p>All the files have one attribute, that connects them all together: The column named ‘id’. Note that the ‘id’ doesn’t have the same property as a key we might now from relational databases: Sometimes one id is listed several times in one column.</p>
 
 <p>After quickly scrolling through the data in MS Excel, i decided to do the following: <br>
-In order to just process numeric data, i dropped the strings from all the csv files containing the description (‘event_type ‘, ‘log_feature ‘, ‘resource_type’) manually with the replace function.</p>
+In order to just process numeric data, i dropped the strings from all the csv files containing the description (‘event_type ‘, ‘log_feature ‘, ‘resource_type’) manually with the excel replace function.</p>
 
 <table>
 <thead>
@@ -161,7 +155,16 @@ between these two resources and the rest.</p></li>
 <p>Also, each id usually had just a few features from <em>log_feature</em>, so i decided to one-hot encode the information into the frame. Actually, i tried two versions of one-hot-encoding to solve this problem: <br>
 At first, i did a binary one-hot-encoding and discarded the <em>volume</em> information of the features, then i tried something else and used the <em>volume</em> value of each feature instead of just a one. </p>
 
-<p>I ended up with a dataframe with a total of 453 features. Of course, this is just the first draft of the set, so started to think of ways to further reduce the feature space.</p>
+<p>I ended up with a dataframe with a total of 453 features, which are quite difficult to visualize even pandas</p>
+
+<pre><code>print train.head(3)
+</code></pre>
+
+<p>prints out a quite extensive output:</p>
+
+<p><img src="https://image.ibb.co/kfwHH5/Screen_Shot_2017_07_31_at_12_22_08.png" width="600"></p>
+
+<p>Note that the log_feature columns contain a lot of zero values. This makes the dataset as a whole quite sparse, i assume we would have difficulties using a strong learner with this problem.</p>
 
 <hr>
 
@@ -173,17 +176,27 @@ At first, i did a binary one-hot-encoding and discarded the <em>volume</em> info
 
 <hr>
 
-
-
 <h3 id="exploratory-visualization">Exploratory Visualization</h3>
 
 <p>As already explained above, due to the sparse nature of the data, a multivariate analysis of the data is not easy to provide. However, i plotted the features in histograms, which seems like a good entry point for further discussions. </p>
 
 <p><img src="https://image.ibb.co/df4Jk5/fig.png" alt="enter image description here" title=""></p>
 
+<p>The histograms shown above give an impression on how sparse the data actually is: <br>
+While some features are distributed across all issues (Severity, Severity type) others occur unevenly. After reading about internet providers service disruptions on the internet, these graphs made much more sense to me: A guy described that usually, if a node has a issue with one feature at a time, this usually doesn’t break the connection. This happens only if a certain combination of issues occur at the same time. </p>
 
+<p>There are few facts about these graphs that really stick out:</p>
 
-<h2 id="todo-log-feature-top-50">TODO : Log feature top 50</h2>
+<ul>
+<li>As we can see, most of the interruptions are just a temporary network glitch ( Fault Severity = 0), but 1 and 2 do seem to cause problems quite frequently (around 35% of the time).</li>
+<li>The event types 11,35 and 34, 15 and 2 seem occur a lot together with <br>
+a network incident.</li>
+<li>The resource types 8 and 2 are used most. There is a significant gap <br>
+between these two resources and the rest.</li>
+<li>The severity type of warning messages 1 and 2 seem to be the most <br>
+frequent ones.</li>
+<li>The log features behave a little different here: We have a bunch of different features, which occur in a different Frequency (Volume). The two graphs above show just how often a given feature appears with an issue. Since the feature with the largest volume occurs 1350 times, the graph on the bottom left corner is highly skewed.</li>
+</ul>
 
 <hr>
 
@@ -193,8 +206,6 @@ At first, i did a binary one-hot-encoding and discarded the <em>volume</em> info
 - <em>If a plot is provided, are the axes, title, and datum clearly defined?</em></p>
 
 <hr>
-
-
 
 <h3 id="algorithms-and-techniques">Algorithms and Techniques</h3>
 
@@ -207,11 +218,11 @@ At first, i did a binary one-hot-encoding and discarded the <em>volume</em> info
 <ul>
 <li>eta [default=0.3, alias: learning_rate]: The learning rate of algorithm, Makes the model more robust by shrinking the weights on each step.</li>
 <li>gamma [default=0, alias: min_split_loss]: A node is split only when the resulting split gives a positive reduction in the loss function. Gamma specifies the minimum loss reduction required to make a split.</li>
-<li>max_depth [default=6]: This describes the maximum depth of a decision tree. The parameter is used to control over-fitting as higher depth will allow model to learn relations very specific to a particular sample. <strong>Include in CV</strong></li>
-<li>min_child_weight [default=1]: here we define the minimum sum of weights of all observations required in a child node of a DT. Its also a measure to prevent overfitting, it avoids relations which might be highly specific to a certain sample.  <strong>Include in CV</strong></li>
+<li>max_depth [default=6]: This describes the maximum depth of a decision tree. The parameter is used to control over-fitting as higher depth will allow model to learn relations very specific to a particular sample.</li>
+<li>min_child_weight [default=1]: here we define the minimum sum of weights of all observations required in a child node of a DT. Its also a measure to prevent overfitting, it avoids relations which might be highly specific to a certain sample.  </li>
 </ul>
 
-<p>What the xgboost algorithm does, with </p>
+<p>The xgboost algorithm  creates a bunch of weak learners, which perform very poorly (just slightly above chance) on their own. But then comes boosting, in which we start by looking over the training data and generate some distributions, then find some set of Weak Learners (classifiers) with low errors, and each learner outputs some hypothesis, <script type="math/tex" id="MathJax-Element-43"> {H_{x}} </script>. This generates some <script type="math/tex" id="MathJax-Element-44">Y </script>(class label), and at the end combines the set of good hypotheses to generate a final hypothesis.</p>
 
 <hr>
 
@@ -221,8 +232,6 @@ At first, i did a binary one-hot-encoding and discarded the <em>volume</em> info
 - <em>Is it made clear how the input data or datasets will be handled by the algorithms and techniques chosen?</em></p>
 
 <hr>
-
-
 
 <h3 id="benchmark">Benchmark</h3>
 
@@ -429,17 +438,27 @@ As in the preprocessing chapter described, there are a lot of attributes we incl
 <pre><code>model.feature_importances
 </code></pre>
 
-<p>returns us a list of how each feature contributed to the prediction. Since we have more than 400 features, it makes sense that not all these features contribute equally to the prediction. Some even have a zero impact. <br>
-  Since this creates only noise and makes further progress harder, it does make sense to remove them.</p>
+<p>returns us a list of how each feature contributed to the prediction. Since we have more than 400 features, it could makes sense that not all these features contribute equally to the prediction. Some might even have a zero impact. <br>
+ Since this creates only noise and makes further progress harder, it does make sense to remove them.</p>
 
-<p>So i tested the model with different thresholds (meaning a different amount of features) and could reduce the feature space from n=452 down to n= 133, without increasing the log loss.  Since some of the features appeared to not add any value to the model, i decided i could as well drop them, so thats what i did. Note that the logloss did not improve in this step.</p>
+<p>So i tested the model with different thresholds (meaning a different amount of features) and found out, that i could reduce the feature space from n=452 down to n= 133, with just a very slight increase in the log loss. </p>
 
 <p><strong>2. Feature engineering</strong> <br>
-So after i shrinked the set down to 133 variables, i decided that the next step would be some feature engineering (although the next time i would first start with feature engineering and then drop unnecessary features).  <br>
-<strong>TBD</strong></p>
+Since i tried very hard to decrease the log loss by feature reduction, but couldn’t succeed eventually, i tried to take a shot for feature engineering. Maybe i can deduce new information, based on a logic or combination of already existing data. </p>
+
+<p>After reading <a href="http://machinelearningmastery.com/discover-feature-engineering-how-to-engineer-features-and-how-to-get-good-at-it/">this</a> interesting post about proper feature engineering, i took a closer look on the data and crafted two new features:</p>
+
+<ul>
+<li>a ranking sorted by severity type (0.0 for the sample with the lowest int, 1.0 for the highest)</li>
+<li>a counter for the location (how often a particular location occurred)</li>
+</ul>
+
+<p>This probhably made the biggest difference in the prediction process. After parameter tuning (see next paragraph) i brought down the log loss to just slightly above 0.50.</p>
+
+<p>Note: If i had to continue working on the project to improve the log loss, more detailed feature engineering would probably the only way to improve significantly.</p>
 
 <p><strong>3. Tuning Parameters</strong> <br>
-Finally, i decided to tune my algorithm by choosing the right parameters for the xgboost algorithm. At the beginning i didn’t expect it to be a very time-, and calculation intense process. Luckily, a friend from work had a AWS-coupon for me, so this allowed me to do the computations much quicker.</p>
+Finally, after deciding on which features to use, i decided to tune my algorithm by choosing the right parameters for the xgboost algorithm. At the beginning i didn’t expect it to be such a time-, and calculation intense process. Luckily, a friend from work had a AWS-coupon for me, so this allowed me to do the computations much quicker.</p>
 
 <p>After i read this <a href="https://www.analyticsvidhya.com/blog/2016/03/complete-guide-parameter-tuning-xgboost-with-codes-python/">article</a> on parameter tuning with xgboost, i decided to tune the following parameters (max. two at a time):</p>
 
@@ -466,8 +485,6 @@ This is not a huge leap, but as i already mentioned, the biggest reduction in th
 
 <hr>
 
-
-
 <h2 id="iv-results">IV. Results</h2>
 
 <p><em>(approx. 2-3 pages)</em></p>
@@ -476,7 +493,7 @@ This is not a huge leap, but as i already mentioned, the biggest reduction in th
 
 <h3 id="model-evaluation-and-validation">Model Evaluation and Validation</h3>
 
-<p>So, i finally reduced the log loss from 0.58 down to 0.50 (on the public kaggle leaderboard). I was more than happy, since this was my first real-world application of the stuff i learned in my nanodegree. Considering the leaderboard stats, i have the impression that i chose an appropriate algorithm and covered the most important steps to achieve a good solution. </p>
+<p>So, i finally reduced the log loss from 0.5877 down to 0.5032 (on the public kaggle leaderboard). I was more than happy, since this was my first real-world application of the stuff i learned in my nanodegree. Considering the leaderboard stats, i have the impression that i chose an appropriate algorithm and covered the most important steps to achieve a good solution. </p>
 
 <p>At the time i ran the fitting for the final model, i made sure to shuffle the set and cross-validate the predictor to eliminate any bias from the training set.</p>
 
@@ -521,6 +538,8 @@ The biggest change in log loss was achieved through implementing the ranks on th
 
 <hr>
 
+
+
 <h2 id="v-conclusion">V. Conclusion</h2>
 
 <p><em>(approx. 1-2 pages)</em></p>
@@ -541,6 +560,8 @@ The biggest change in log loss was achieved through implementing the ranks on th
 - <em>Have you visualized a relevant or important quality about the problem, dataset, input data, or results?</em> <br>
 - <em>Is the visualization thoroughly analyzed and discussed?</em> <br>
 - <em>If a plot is provided, are the axes, title, and datum clearly defined?</em></p>
+
+
 
 <h3 id="reflection">Reflection</h3>
 
