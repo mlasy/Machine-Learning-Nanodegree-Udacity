@@ -205,11 +205,10 @@ Depending on how low a participant scores using the multiclass log loss function
 <p>This leaderboard ranking (the private and therefore final ranking) will be used as a benchmark in this project. <br>
 Since this is my first kaggle problem, i do not expect to score anything in the top 33% of the leaderboard.</p>
 
-<hr>
-
 <p>To get a feeling on what score to expect:  <br>
-The first place on the Telstra leaderboard, a user called Mario Filho, scored a log loss of 0.3954. <br>
-Once i submitted the complete dataset &amp; ran xgboost with default settings, i scored a log loss of 0.58323. So the final prediction will probably be in the range between 0.4 and 0.55.</p>
+The first place on the Telstra leaderboard, a user called Mario Filho, scored a log loss of 0.3954. To get into the top 100, i would have to score at least 0.483.</p>
+
+<p>A graph which displays the log loss distribution of the competition will be provided in the final chapter of the project.</p>
 
 <h2 id="iii-methodology">III. Methodology</h2>
 
@@ -265,12 +264,9 @@ I decided to drop the information of the <em>volume</em> column and make <em>log
 <p><br></p>
 
 <p>Now i had all the features one hot encoded in different tables. <br>
-Time, to unify them into one table. In order to do so, i merged the files one by one into the ‘train’ pandas frame. Here’s a code snippet:</p>
+Time, to unify them into one table. In order to do so, i merged the files one by one into the ‘train’ pandas frame. </p>
 
-<pre><code>train = pd.merge(train, pd.DataFrame(severity, columns = ['id', 'severity_type']), on='id',how='left')
-</code></pre>
-
-<p>As you can see, i am merging the ‘train’ frame with the ‘severity’ frame on their id, by using keys from the train frame, similar to a SQL left outer join. The operation preserves the key order.</p>
+<p>I merged the ‘train’ frame with the ‘severity’ frame on their id, by using keys from the train frame, similar to a SQL left outer join. The operation preserves the key order.</p>
 
 <p>I finally ended up with a 7381x453 dataframe, which contained all possible features, one-hot encoded. <br>
 So here’s a simplified version of how the table looks after all the operations. Note that it containts 453 columns (shortened here with 1…n) </p>
@@ -328,8 +324,6 @@ So here’s a simplified version of how the table looks after all the operations
 
 <p>This dataset is now ready for a first fitting iteration with xgboost.</p>
 
-
-
 <h3 id="implementation">Implementation</h3>
 
 <p>Now that i finally got the dataframe set up, we’re ready to run the first iteration of our fault severity prediction. <br>
@@ -383,7 +377,7 @@ Since i tried very hard to decrease the log loss by feature reduction, but could
 <li>a counter for the location (how often a particular location occurred)</li>
 </ul>
 
-<p>This probhably made the biggest difference in the prediction process. After parameter tuning (see next paragraph) i brought down the log loss to just slightly above 0.50.</p>
+<p>This probably made the biggest difference in the prediction process. After parameter tuning (see next paragraph) i brought down the log loss to just above 0.50.</p>
 
 <p>Note: If i had to continue working on the project to improve the log loss, more detailed feature engineering would probably the only way to improve significantly.</p>
 
@@ -403,10 +397,12 @@ The fraction of observations to be randomly samples for each tree and fraction o
 
 <p>I expected the most impact of the to come from the ‘max_depth’ and ‘num_boosting_rounds’ variable, since they have the biggest impact on over- or underfitting.</p>
 
-<p>After running the long and processing power intense tuning i could improve the log loss from …. down to …. <br>
+<p>After running the long and processing power intense tuning i could improve the log loss from 0.58323 down to 0.50050 (private kaggle leaderboard). <br>
 This is not a huge leap, but as i already mentioned, the biggest reduction in the log loss comes in this problem from choosing and engineering the right set of features.</p>
 
+<p>Here you can see how i did over time:</p>
 
+<p><img src="https://image.ibb.co/g8SeAQ/fig32.png" alt="Improvement over time" title=""></p>
 
 <h2 id="iv-results">IV. Results</h2>
 
@@ -414,15 +410,18 @@ This is not a huge leap, but as i already mentioned, the biggest reduction in th
 
 <h3 id="model-evaluation-and-validation">Model Evaluation and Validation</h3>
 
-<p>So, i finally reduced the log loss from 0.5877 down to 0.5032 (on the public kaggle leaderboard). I was more than happy, since this was my first real-world application of the stuff i learned in my nanodegree. Considering the leaderboard stats, i have the impression that i chose an appropriate algorithm and covered the most important steps to achieve a good solution. </p>
+<p>After i scored 0.50050 on the private kaggle leaderboard i decided to stop further engineering on the project. <br>
+I validated my results with a part of my own trainset (25%) and on the kaggle submission board. Since the kaggle validation data is not visible to the participant, it’s safe to assume, that the model can be trusted and actually performs well on unseen data.</p>
 
-<p>At the time i ran the fitting for the final model, i made sure to shuffle the set and cross-validate the predictor to eliminate any bias from the training set.</p>
+<p>While i did the grid-search on the AWS-instance, i did in fact overfit at one point, when i set the ‘max_depth’ too high. But i quickly catched this error while testing the model on my own testset.</p>
 
-<p>Also, at each step i checked samples of the data to make sure that the operations i did on the set where accurate and no problems occurred during the preprocessing and merging on the set. </p>
+<p>I was very happy to see the score of 0.50050 appear on the kaggle submission board. This was much more than i expected in my benchmark.  This score would put me in the top 19%. </p>
 
-<p>The final and most important factor, that proves the robustness of the model is the fact, that it is tested against unseen data on the kaggle page. Therefore its safe to assume, that the model can be trusted and actually performs well on unseen data.</p>
+<p>I have the impression that i chose an appropriate algorithm and covered the most important steps to achieve a good solution compared to the initial benchmark while solving the network disruption problem.  <br>
+To get a understanding of how good the solution actually is: <br>
+The chance of being right by chance would be 33% in this problem, so an improvement up to approx. 66% sounds not too bad. Although this value is not very reliable, i think it gives the telstra a good opinion on how to rate a network incident.</p>
 
-
+<p><img src="https://image.ibb.co/d6b9Ma/log_loss_curve.png" alt="Improvement over time" title=""></p>
 
 <h3 id="justification">Justification</h3>
 
@@ -450,13 +449,12 @@ The biggest change in log loss was achieved through implementing the ranks on th
 
 <h3 id="free-form-visualization">Free-Form Visualization</h3>
 
-<p>As a small add on, i decided to track the improvement i did on the kaggle submission page as a graph. Note that sometimes, i really thought that i could improve the log loss (for example after i did an extensive grid search and parameter tuning) but ended up slightly worse than before. I really struggled with finding out what went wrong, so i had to rewrite parts of the notebook, which was a quite painful process.</p>
+<p>At one point, i tried to reduce the size of the total dataset by filtering out unimportant features (feature selection). <br>
+In the end, this method didn’t really help me to improve the log loss, although in some cases i think it might be quite helpful to reduce the dimensions of the dataset.</p>
 
-<p><img src="https://image.ibb.co/g8SeAQ/fig32.png" alt="enter image description here" title=""></p>
+<p><img src="https://image.ibb.co/bX3H7F/fig32.png" alt="Improvement over time" title=""></p>
 
-<p>You can see, that i had some initial troubles at the beginning, when i worked with just a fraction of the availiable features. The log loss improved after the 15th of june, when i ran xgboost on the whole dataset and experimented with feature engineering.</p>
-
-
+<p>Although this method even lowered the log loss slighlty on the personal set, it failed to do so on the kaggle test set. Thats why i abandoned feature selection at the end.</p>
 
 <h3 id="reflection">Reflection</h3>
 
